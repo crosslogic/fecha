@@ -1,8 +1,44 @@
 package fecha
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+	"time"
+)
 
-func TestMarshal(t *testing.T) {
+func TestTime(t *testing.T) {
+
+	// Creo fecha
+	f, err := NewFecha("2016-02-19")
+	if err != nil {
+		t.Error(err)
+	}
+
+	enTime := f.Time()
+	esperado := time.Date(2016, 2, 19, 0, 0, 0, 0, time.UTC)
+	if enTime != esperado {
+
+		t.Error("Mal convertido a Time.",
+			"\nEsperado: ", esperado,
+			"\nObtenido: ", enTime,
+		)
+	}
+	fmt.Println(enTime)
+}
+
+func TestNewDate(t *testing.T) {
+	// Creo fecha
+	f, err := NewFecha("2016-02-19")
+	if err != nil {
+		t.Error(err)
+	}
+
+	if f != Fecha(20160219) {
+		t.Error()
+	}
+}
+
+func TestMarshalAndUnmarshal(t *testing.T) {
 
 	// Creo fecha
 	f, err := NewFecha("2016-02-19")
@@ -16,15 +52,16 @@ func TestMarshal(t *testing.T) {
 		t.Error(err)
 	}
 	enString := string(by)
+	fmt.Println("Marshaled: ", enString)
 
 	// Demarshalizo
-	fNueva := Fecha{}
+	var fNueva Fecha
 	err = fNueva.UnmarshalJSON(by)
 	if err != nil {
 		t.Error(err)
 	}
 
-	// Corroboro
+	//Corroboro
 	if fNueva != f {
 		t.Error("No se obtuvo el string esperado.",
 			"\nEsperado: ", f,
