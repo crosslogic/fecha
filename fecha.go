@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/pkg/errors"
 )
 
@@ -14,11 +16,23 @@ import (
 type Fecha int
 
 func NewFecha(texto string) (fch Fecha, err error) {
-	if len(texto) != 10 {
-		return fch, errors.Wrap(err, `Parseando string: "`+texto+`", largo incorrecto.`)
-	}
 
 	t, err := time.Parse("2006-01-02", texto)
+	if err != nil {
+		return fch, errors.Wrap(err, `Parseando string: "`+texto+`"`)
+	}
+
+	fch = deTimeAFecha(t)
+
+	return fch, err
+}
+
+func NewFechaFromLayout(layout, texto string) (fch Fecha, err error) {
+
+	if layout == "" {
+		layout = "02/01/2006"
+	}
+	t, err := time.Parse(layout, texto)
 	if err != nil {
 		return fch, errors.Wrap(err, `Parseando string: "`+texto+`"`)
 	}
@@ -55,6 +69,26 @@ func (f Fecha) Time() (nuevaFecha time.Time) {
 func (f Fecha) AgregarDias(dias int) (NuevaFecha Fecha) {
 	enTime := f.Time().Add(time.Duration(24*dias) * time.Hour)
 	return deTimeAFecha(enTime)
+}
+
+// Funciones para serializar y desserializar las fechas usando una base de datos MongoDB
+func (f *Fecha) SetBSON(raw bson.Raw) (err error) {
+
+	valor := int32(0)
+	err = raw.Unmarshal(&valor)
+	if err != nil {
+		return err
+	}
+	*f = Fecha(valor)
+	if f.IsValid() == false {
+		//		panic(fmt.Sprint("No se pudo desserializar la fecha", raw))
+		return errors.New(fmt.Sprint("No se pudo deserializar la fecha: ", valor))
+	}
+	return nil
+}
+
+func (f Fecha) GetBSON() (rtdo interface{}, err error) {
+	return int32(f), nil
 }
 
 // Para tomar un string y pasarlo a una struct
@@ -99,6 +133,10 @@ func deTimeAFecha(f time.Time) (fecha Fecha) {
 	return Fecha(enInt)
 }
 
+// JsonString devuelve el la fecha en forato 2016-02-19
+func (f Fecha) JsonString() string {
+	return f.Time().Format("2006-01-02")
+}
 func (f Fecha) String() string {
 	enTexto := fmt.Sprint(int(f))
 	fecha, err := time.Parse("20060102", enTexto)
@@ -151,11 +189,12 @@ func (f Fecha) AgregarDiasHabiles(cantidad int) (nuevaFecha Fecha) {
 
 // Si el día que se ingresa no es habil, avanza hacia adelante hasta encontrar uno.
 func proximoDiaHabil(f Fecha) (nuevaFecha Fecha) {
+	nuevaFecha = f
 	for {
-		if diaHabil(f) == true {
+		if diaHabil(nuevaFecha) == true {
 			break
 		}
-		if diaHabil(f) == false {
+		if diaHabil(nuevaFecha) == false {
 			// Agrego un día hasta llegar a un día habil
 			nuevaFecha = deTimeAFecha(nuevaFecha.Time().Add(time.Hour * 24))
 		}
