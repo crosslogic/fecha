@@ -1,6 +1,7 @@
 package fecha
 
 import (
+	"database/sql/driver"
 	"fmt"
 	"log"
 	"strconv"
@@ -65,6 +66,21 @@ func (f Fecha) Time() (nuevaFecha time.Time) {
 	return nuevaFecha
 }
 
+// Dia devuelve el número del día
+func (f Fecha) Dia() int {
+	return f.Time().Day()
+}
+
+// Mes devuelve el número del mes.
+func (f Fecha) Mes() int {
+	return int(f.Time().Month())
+}
+
+// Año devuelve el año en formato 2006
+func (f Fecha) Año() int {
+	return f.Time().Year()
+}
+
 // Devuelve una nueva fecha con la cantidad de días agregados
 func (f Fecha) AgregarDias(dias int) (NuevaFecha Fecha) {
 	enTime := f.Time().Add(time.Duration(24*dias) * time.Hour)
@@ -98,7 +114,8 @@ func (f Fecha) MarshalJSON() (by []byte, err error) {
 	}
 	enTime := f.Time()
 	enString := enTime.Format("2006-01-02")
-	by = []byte(enString)
+	by = []byte(`"` + enString + `"`)
+	fmt.Println(enString)
 	return by, nil
 }
 
@@ -137,14 +154,30 @@ func deTimeAFecha(f time.Time) (fecha Fecha) {
 func (f Fecha) JsonString() string {
 	return f.Time().Format("2006-01-02")
 }
+
 func (f Fecha) String() string {
-	enTexto := fmt.Sprint(int(f))
-	fecha, err := time.Parse("20060102", enTexto)
-	if err != nil {
-		panic(err)
+	// si es zero, devuelvo el valor cero
+	if f.IsZero() {
+		return "01/01/0001"
 	}
 
+	enTexto := fmt.Sprint(int(f))
+	fecha, err := time.Parse("20060102", enTexto)
+
+	// Si es inválida
+	if err != nil {
+		return "N/A"
+	}
+
+	// Está ok
 	return fecha.Format("02/01/2006")
+}
+
+func (f Fecha) IsZero() bool {
+	if int(f) == 0 {
+		return true
+	}
+	return false
 }
 
 // devuelve la fecha del día para suegerirla en el index
@@ -209,4 +242,22 @@ func diaHabil(f Fecha) bool {
 		return false
 	}
 	return true
+}
+
+// Value satisface la interface de package sql.
+// En la base de datos la guarda como el tipo DATE que es un int64
+func (f Fecha) Value() (driver.Value, error) {
+	if f.IsValid() == false {
+		return nil, nil
+	}
+	return f.Time(), nil
+}
+
+func (f *Fecha) Scan(value interface{}) error {
+	if value == nil {
+		*f = NewFechaFromTime(time.Time{})
+	}
+	*f = NewFechaFromTime(value.(time.Time))
+
+	return nil
 }
