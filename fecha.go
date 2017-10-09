@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"log"
+	"math"
 	"strconv"
 	"time"
 
@@ -85,6 +86,14 @@ func (f Fecha) Año() int {
 func (f Fecha) AgregarDias(dias int) (NuevaFecha Fecha) {
 	enTime := f.Time().Add(time.Duration(24*dias) * time.Hour)
 	return deTimeAFecha(enTime)
+}
+
+// Diff devuelve la cantidad de días de diferencia entre dos fechas
+// Se entiende que f2 es la fecha posterior.
+func (f Fecha) Diff(f2 Fecha) (dias int) {
+	horas := f2.Time().Sub(f.Time()).Hours()
+	dias = int(math.Trunc(horas / 24))
+	return dias
 }
 
 // Funciones para serializar y desserializar las fechas usando una base de datos MongoDB
