@@ -88,10 +88,10 @@ func (f Fecha) AgregarDias(dias int) (NuevaFecha Fecha) {
 	return deTimeAFecha(enTime)
 }
 
-// Diff devuelve la cantidad de días de diferencia entre dos fechas
+// Menos devuelve la cantidad de días de diferencia entre dos fechas
 // Se entiende que f2 es la fecha posterior.
-func (f Fecha) Diff(f2 Fecha) (dias int) {
-	horas := f2.Time().Sub(f.Time()).Hours()
+func (f Fecha) Menos(f2 Fecha) (dias int) {
+	horas := f.Time().Sub(f2.Time()).Hours()
 	dias = int(math.Trunc(horas / 24))
 	return dias
 }
