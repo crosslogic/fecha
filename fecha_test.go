@@ -100,7 +100,51 @@ func TestNewDate(t *testing.T) {
 	}
 }
 
-func TestMarshalAndUnmarshal(t *testing.T) {
+func TestAgregarMeses(t *testing.T) {
+	// Creo fecha
+	f, err := NewFecha("2016-12-19")
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Agrego 1 mes
+	f1, err := f.AgregarMeses(1)
+	if err != nil {
+		t.Error(err)
+	}
+	if f1 != Fecha(20170119) {
+		t.Error("Se esperaba", Fecha(20170119), "se obtuvo ", f1)
+	}
+
+	// Agrego 13 meses
+	f2, err := f.AgregarMeses(13)
+	if err != nil {
+		t.Error(err)
+	}
+	if f2 != Fecha(20180119) {
+		t.Error("Se esperaba", Fecha(20180119), "se obtuvo ", f2)
+	}
+
+	// Resto 6 meses
+	f3, err := f.AgregarMeses(-6)
+	if err != nil {
+		t.Error(err)
+	}
+	if f3 != Fecha(20160619) {
+		t.Error("Se esperaba", Fecha(20160619), "se obtuvo ", f3)
+	}
+
+	// Resto 6 meses
+	f4, err := f.AgregarMeses(-18)
+	if err != nil {
+		t.Error(err)
+	}
+	if f4 != Fecha(20150619) {
+		t.Error("Se esperaba", Fecha(20150619), "se obtuvo ", f3)
+	}
+}
+
+func TestMarshalAndUnmarshalJSON(t *testing.T) {
 
 	// Creo fecha
 	f, err := NewFecha("2016-02-19")
@@ -114,7 +158,6 @@ func TestMarshalAndUnmarshal(t *testing.T) {
 		t.Error(err)
 	}
 	enString := string(by)
-	fmt.Println("Marshaled: ", enString)
 
 	// Demarshalizo
 	var fNueva Fecha
@@ -132,10 +175,10 @@ func TestMarshalAndUnmarshal(t *testing.T) {
 	}
 
 	// Corroboro que me lo devuelva igual
-	if enString != "2016-02-19" {
+	if enString[1:11] != "2016-02-19" {
 		t.Error("No se obtuvo el string esperado.",
 			"\nEsperado: ", "2016-02-19",
-			"\nObtenido: ", enString,
+			"\nObtenido: ", enString[1:11],
 		)
 	}
 }

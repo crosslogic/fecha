@@ -3,9 +3,9 @@ package fecha
 import (
 	"database/sql/driver"
 	"fmt"
-	"log"
 	"math"
 	"strconv"
+	"strings"
 	"time"
 
 	"gopkg.in/mgo.v2/bson"
@@ -88,6 +88,51 @@ func (f Fecha) AgregarDias(dias int) (NuevaFecha Fecha) {
 	return deTimeAFecha(enTime)
 }
 
+// AgregarMeses suma la cantidad de meses deseados. El día siempre queda igual
+// salvo que el mes destino tenga menos días. Por ejemplo, sumar 1 mes al 31/01/2017
+// resulta en 28/02/2017
+func (f Fecha) AgregarMeses(cantidad int) (nuevaFecha Fecha, err error) {
+	dia := f.Dia()
+	mes := f.Mes()
+	año := f.Año()
+
+	añosAgregar := 0
+
+	// Cambia año?
+	if mes+cantidad > 12 {
+		añosAgregar++
+	}
+
+	añosAgregar = cantidad / 12
+
+	mesesAgregar := cantidad - añosAgregar*12
+
+	if año+añosAgregar > 9999 {
+		return nuevaFecha, errors.New("No se puede crear una fecha con año posterior al 9999")
+	}
+
+	fec := time.Date(año+añosAgregar, time.Month(mes+mesesAgregar), dia, 0, 0, 0, 0, time.UTC)
+	return NewFechaFromTime(fec), nil
+
+}
+
+// AgregarAños devuelve una nueva fecha con los añós agregados
+func (f Fecha) AgregarAños(cantidad int) (nuevaFecha Fecha, err error) {
+	fechaT := f.Time()
+
+	dia := fechaT.Day()
+	mes := fechaT.Month()
+	año := fechaT.Year()
+
+	nuevoAño := año + cantidad
+	if nuevoAño > 9999 {
+		return nuevaFecha, errors.New("No se puede crear una fecha con año posterior al 9999")
+	}
+
+	nuevaFecha = NewFechaFromTime(time.Date(nuevoAño, mes, dia, 0, 0, 0, 0, time.UTC))
+	return
+}
+
 // Menos devuelve la cantidad de días de diferencia entre dos fechas
 // Se entiende que f2 es la fecha posterior.
 func (f Fecha) Menos(f2 Fecha) (dias int) {
@@ -128,14 +173,15 @@ func (f Fecha) MarshalJSON() (by []byte, err error) {
 	return by, nil
 }
 
-// Es para pasar un Fecha => JSON
+// UnmarshalJSON Es para pasar un Fecha => JSON
 func (f *Fecha) UnmarshalJSON(input []byte) error {
 	texto := string(input)
 
-	log.Println("Unmarshalling input: ", texto)
+	// Quito las comillas
+	texto = strings.Replace(texto, `"`, "", -1)
+
 	fechaEnTime, err := time.Parse("2006-01-02", texto)
 
-	log.Println("Pasado a fecha", texto)
 	if err != nil {
 		return err
 	}
