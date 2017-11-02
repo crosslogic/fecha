@@ -141,6 +141,54 @@ func (f Fecha) Menos(f2 Fecha) (dias int) {
 	return dias
 }
 
+// Agrupacion dice el intervalo que se desea para una TimeSeries
+type Agrupacion string
+
+const (
+	// AgrupacionMensual devolverá el primer día de cada mes
+	AgrupacionMensual Agrupacion = "Mensual"
+	// AgrupacionSemanal devolverá las semanas agrupando el lunes como primer día
+	AgrupacionSemanal = "Semanal"
+)
+
+// TimeSeries devuelve todos los intervalos de fechas entre las dos fechas especificadas.
+// Por ejemplo: entre 01/05/2017 y 04/01/2018 = [01/05/2017, 01/06/2017, 01/08/2018, 01/09/2018...]
+func TimeSeries(desde, hasta Fecha, agrupacion Agrupacion) (fechas []Fecha, err error) {
+	switch agrupacion {
+	case AgrupacionMensual:
+		// Desde
+		mes := desde.Mes()
+		año := desde.Año()
+		f1Temp := time.Date(año, time.Month(mes), 1, 0, 0, 0, 0, time.UTC)
+		f1 := NewFechaFromTime(f1Temp)
+		// La primer fecha va seguro
+		fechas = append(fechas, f1)
+
+		// Hasta
+		mesHasta := hasta.Mes()
+		añoHasta := hasta.Año()
+		fnTemp := time.Date(añoHasta, time.Month(mesHasta), 1, 0, 0, 0, 0, time.UTC)
+		fn := NewFechaFromTime(fnTemp)
+
+		fSiguiente := f1
+		for {
+			fSiguiente, err = fSiguiente.AgregarMeses(1)
+			if err != nil {
+				return fechas, errors.Wrap(err, "Creando TimeSeries")
+			}
+			fechas = append(fechas, fSiguiente)
+
+			// Verifico si llegué a la última fecha
+			if fSiguiente == fn {
+				break
+			}
+		}
+	default:
+		return fechas, errors.New("Agrupacion no implementada")
+	}
+	return
+}
+
 // Funciones para serializar y desserializar las fechas usando una base de datos MongoDB
 func (f *Fecha) SetBSON(raw bson.Raw) (err error) {
 

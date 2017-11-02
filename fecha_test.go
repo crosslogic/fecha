@@ -2,6 +2,7 @@ package fecha
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -141,6 +142,41 @@ func TestAgregarMeses(t *testing.T) {
 	}
 	if f4 != Fecha(20150619) {
 		t.Error("Se esperaba", Fecha(20150619), "se obtuvo ", f3)
+	}
+}
+
+func TestTimeSeries(t *testing.T) {
+	desde := Fecha(20170507)
+	hasta := Fecha(20180729)
+
+	ts, err := TimeSeries(desde, hasta, AgrupacionMensual)
+	if err != nil {
+		t.Error(err)
+	}
+
+	esperado := []Fecha{
+		Fecha(20170501),
+		Fecha(20170601),
+		Fecha(20170701),
+		Fecha(20170801),
+		Fecha(20170901),
+		Fecha(20171001),
+		Fecha(20171101),
+		Fecha(20171201),
+		Fecha(20180101),
+		Fecha(20180201),
+		Fecha(20180301),
+		Fecha(20180401),
+		Fecha(20180501),
+		Fecha(20180601),
+		Fecha(20180701),
+	}
+
+	if reflect.DeepEqual(ts, esperado) == false {
+		t.Error("TimeSeries mal creada",
+			"\nEsperado: ", esperado,
+			"\nObtenido: ", ts,
+		)
 	}
 }
 
