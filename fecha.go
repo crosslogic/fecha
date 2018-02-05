@@ -211,8 +211,11 @@ func (f Fecha) GetBSON() (rtdo interface{}, err error) {
 
 // Para tomar un string y pasarlo a una struct
 func (f Fecha) MarshalJSON() (by []byte, err error) {
+	if f == 0 {
+		by = []byte("null")
+	}
 	if f.IsValid() == false {
-		return by, errors.New(fmt.Sprint("No se puede marhsalizar la fecha ", int(f), " . No es válida"))
+		return by, errors.New(fmt.Sprint("No se puede marshalizar la fecha ", int(f), " . No es válida"))
 	}
 	enTime := f.Time()
 	enString := enTime.Format("2006-01-02")
@@ -224,6 +227,10 @@ func (f Fecha) MarshalJSON() (by []byte, err error) {
 // UnmarshalJSON Es para pasar un Fecha => JSON
 func (f *Fecha) UnmarshalJSON(input []byte) error {
 	texto := string(input)
+
+	if texto == "null" {
+		*f = Fecha(0)
+	}
 
 	// Quito las comillas
 	texto = strings.Replace(texto, `"`, "", -1)
