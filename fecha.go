@@ -209,10 +209,11 @@ func (f Fecha) GetBSON() (rtdo interface{}, err error) {
 	return int32(f), nil
 }
 
-// Para tomar un string y pasarlo a una struct
+// MarshalJSON es para tomar un string y pasarlo a una fecha.Fecha
 func (f Fecha) MarshalJSON() (by []byte, err error) {
 	if f == 0 {
 		by = []byte("null")
+		return by, nil
 	}
 	if f.IsValid() == false {
 		return by, errors.New(fmt.Sprint("No se puede marshalizar la fecha ", int(f), " . No es válida"))
