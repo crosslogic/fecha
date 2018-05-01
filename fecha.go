@@ -229,8 +229,9 @@ func (f Fecha) MarshalJSON() (by []byte, err error) {
 func (f *Fecha) UnmarshalJSON(input []byte) error {
 	texto := string(input)
 
-	if texto == "null" {
+	if texto == "null" || texto == "" {
 		*f = Fecha(0)
+		return nil
 	}
 
 	// Quito las comillas
