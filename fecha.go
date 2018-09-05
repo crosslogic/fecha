@@ -1,6 +1,10 @@
+// Package fecha está pensado para simplificar el trabajo con fechas.
+// Trabaja con un int subyacente, por lo que las comparaciones son fáciles.
+// Además incluye las funciones de Marshal y Unmarshal para MongoDB, SQL y JSON.
 package fecha
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"fmt"
 	"math"
@@ -8,15 +12,15 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/mgo.v2/bson"
-
 	"github.com/pkg/errors"
+	"gopkg.in/mgo.v2/bson"
 )
 
 // Fecha permite utilizar time.Time ignorando horas y zonas horarias.
 // Se entiende que todas las fechas están guardadas en UTC.
 type Fecha int
 
+// NewFecha parsea un texto con formato JSON.
 func NewFecha(texto string) (fch Fecha, err error) {
 
 	t, err := time.Parse("2006-01-02", texto)
@@ -29,6 +33,7 @@ func NewFecha(texto string) (fch Fecha, err error) {
 	return fch, err
 }
 
+// NewFechaFromLayout parsea el texto ingresado, utilizando el layout especificado.
 func NewFechaFromLayout(layout, texto string) (fch Fecha, err error) {
 
 	if layout == "" {
@@ -44,11 +49,13 @@ func NewFechaFromLayout(layout, texto string) (fch Fecha, err error) {
 	return fch, err
 }
 
+// NewFechaFromTime le corta la hora y devuelve la fecha.
 func NewFechaFromTime(t time.Time) (fch Fecha) {
 	fch = deTimeAFecha(t)
 	return
 }
 
+// IsValid devuelve true si es una fecha válida.
 func (f Fecha) IsValid() bool {
 	_, err := time.Parse("20060102", fmt.Sprint(int(f)))
 	if err != nil {
@@ -57,7 +64,7 @@ func (f Fecha) IsValid() bool {
 	return true
 }
 
-// Devuele la representación en formato time.Time
+// Time devuele la representación con el tipo time.Time
 func (f Fecha) Time() (nuevaFecha time.Time) {
 	enTexto := fmt.Sprint(int(f))
 	nuevaFecha, err := time.Parse("20060102", enTexto)
@@ -82,7 +89,8 @@ func (f Fecha) Año() int {
 	return f.Time().Year()
 }
 
-// Devuelve una nueva fecha con la cantidad de días agregados
+// AgregarDias devuelve una nueva fecha con la cantidad de días agregados
+// Si el signo es negativo los resta.
 func (f Fecha) AgregarDias(dias int) (NuevaFecha Fecha) {
 	enTime := f.Time().Add(time.Duration(24*dias) * time.Hour)
 	return deTimeAFecha(enTime)
@@ -189,7 +197,7 @@ func TimeSeries(desde, hasta Fecha, agrupacion Agrupacion) (fechas []Fecha, err 
 	return
 }
 
-// Funciones para serializar y desserializar las fechas usando una base de datos MongoDB
+// SetBSON lo utiliza para serializar y desserializar las fechas usando una base de datos MongoDB
 func (f *Fecha) SetBSON(raw bson.Raw) (err error) {
 
 	valor := int32(0)
@@ -199,12 +207,13 @@ func (f *Fecha) SetBSON(raw bson.Raw) (err error) {
 	}
 	*f = Fecha(valor)
 	if f.IsValid() == false {
-		//		panic(fmt.Sprint("No se pudo desserializar la fecha", raw))
+		//		panic(fmt.Sprint("No se pudo deserializar la fecha", raw))
 		return errors.New(fmt.Sprint("No se pudo deserializar la fecha: ", valor))
 	}
 	return nil
 }
 
+// GetBSON lo utiliza para serializar y deserializar las fechas usando una base de datos MongoDB
 func (f Fecha) GetBSON() (rtdo interface{}, err error) {
 	return int32(f), nil
 }
@@ -262,8 +271,8 @@ func deTimeAFecha(f time.Time) (fecha Fecha) {
 	return Fecha(enInt)
 }
 
-// JsonString devuelve el la fecha en forato 2016-02-19
-func (f Fecha) JsonString() string {
+// JSONString devuelve el la fecha en forato 2016-02-19
+func (f Fecha) JSONString() string {
 	return f.Time().Format("2006-01-02")
 }
 
@@ -285,6 +294,7 @@ func (f Fecha) String() string {
 	return fecha.Format("02/01/2006")
 }
 
+// IsZero devuelve true si la fecha es el número 0.
 func (f Fecha) IsZero() bool {
 	if int(f) == 0 {
 		return true
@@ -292,7 +302,7 @@ func (f Fecha) IsZero() bool {
 	return false
 }
 
-// devuelve la fecha del día para suegerirla en el index
+// DiaDeLaSemana devuelve la fecha del día para suegerirla en el index
 func (f Fecha) DiaDeLaSemana() string {
 	dia := f.Time().Weekday()
 	switch dia {
@@ -314,8 +324,8 @@ func (f Fecha) DiaDeLaSemana() string {
 	return ""
 }
 
-// Si agrega la cantidad de días especificados en el argumento.
-// Considera los días hábiles nomás.
+// AgregarDiasHabiles suma la cantidad de días especificados en el argumento.
+// Considera los sábados y domingos (no tiene en cuenta feriados)
 func (f Fecha) AgregarDiasHabiles(cantidad int) (nuevaFecha Fecha) {
 
 	// Si el primer día no es hábil, arrastro hasta el próximo día hábil
@@ -356,6 +366,9 @@ func diaHabil(f Fecha) bool {
 	return true
 }
 
+var _ sql.Scanner = (*Fecha)(nil)
+var _ driver.Valuer = (*Fecha)(nil)
+
 // Value satisface la interface de package sql.
 // En la base de datos la guarda como el tipo DATE que es un int64
 func (f Fecha) Value() (driver.Value, error) {
@@ -365,6 +378,8 @@ func (f Fecha) Value() (driver.Value, error) {
 	return f.Time(), nil
 }
 
+// Scan satisface la interface de package sql.
+// En la base de datos la guarda como el tipo DATE que es un int64
 func (f *Fecha) Scan(value interface{}) error {
 	if value == nil {
 		*f = NewFechaFromTime(time.Time{})
