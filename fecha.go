@@ -33,6 +33,44 @@ func NewFecha(texto string) (fch Fecha, err error) {
 	return fch, err
 }
 
+// NewFechaFromInts crea una fecha a partir de los números ingresados
+func NewFechaFromInts(año, mes, dia int) (fch Fecha, err error) {
+
+	if año < 1000 || año > 9999 {
+		return fch, errors.New("el año debe estar entre 1000 y 9999")
+	}
+	añoStr := fmt.Sprint(año)
+
+	mesStr := ""
+	switch mes {
+	case 1, 2, 3, 4, 5, 6, 7, 8, 9:
+		mesStr = fmt.Sprint("0", mes)
+	case 10, 11, 12:
+		mesStr = fmt.Sprint(mes)
+	default:
+		return fch, errors.New("el mes debe estar entre 1 y 12")
+	}
+
+	diaStr := ""
+	switch dia {
+	case 1, 2, 3, 4, 5, 6, 7, 8, 9:
+		diaStr = fmt.Sprint("0", dia)
+	default:
+		diaStr = fmt.Sprint(dia)
+	}
+
+	fechaEntera := fmt.Sprintf("%v-%v-%v", añoStr, mesStr, diaStr)
+	t, err := time.Parse("2006-01-02", fechaEntera)
+	if err != nil {
+		return fch, errors.Wrap(err, `Parseando string: "`+fechaEntera+`"`)
+	}
+
+	fch = deTimeAFecha(t)
+
+	return fch, err
+
+}
+
 // NewFechaFromLayout parsea el texto ingresado, utilizando el layout especificado.
 func NewFechaFromLayout(layout, texto string) (fch Fecha, err error) {
 

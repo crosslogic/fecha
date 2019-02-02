@@ -248,3 +248,28 @@ func TestMarshalAndUnmarshalJSONValoresVacios(t *testing.T) {
 		)
 	}
 }
+
+func TestNewFechaFromInts(t *testing.T) {
+	var fch Fecha
+	var err error
+
+	fch, err = NewFechaFromInts(2019, 2, 2)
+	assert.Nil(t, err)
+	assert.Equal(t, fch, Fecha(20190202))
+
+	fch, err = NewFechaFromInts(2019, 12, 31)
+	assert.Nil(t, err)
+	assert.Equal(t, fch, Fecha(20191231))
+
+	fch, err = NewFechaFromInts(10000, 12, 31)
+	assert.NotNil(t, err)
+
+	fch, err = NewFechaFromInts(2019, 13, 12)
+	assert.NotNil(t, err)
+
+	fch, err = NewFechaFromInts(2019, 11, -2)
+	assert.NotNil(t, err)
+
+	fch, err = NewFechaFromInts(2019, 11, 31)
+	assert.NotNil(t, err)
+}
