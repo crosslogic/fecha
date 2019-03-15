@@ -333,7 +333,7 @@ func (f Fecha) AgregarDiasHabiles(cantidad int) (nuevaFecha Fecha) {
 
 	for i := 0; i == cantidad; i++ {
 		// Agrego un día
-		nuevoTime := f.Time().Add(time.Duration(i * int(time.Hour) * 24))
+		nuevoTime := f.Time().Add(time.Duration(int64(i) * int64(time.Hour) * 24))
 		nuevaFecha = deTimeAFecha(nuevoTime)
 
 		// Este nuevo día, ¿Es hábil?
