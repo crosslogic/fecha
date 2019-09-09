@@ -17,7 +17,9 @@ func TestTime(t *testing.T) {
 		t.Error(err)
 	}
 
-	enTime := f.Time()
+	enTime, err := f.Time()
+	assert.Nil(t, err)
+
 	esperado := time.Date(2016, 2, 19, 0, 0, 0, 0, time.UTC)
 	if enTime != esperado {
 
@@ -30,64 +32,99 @@ func TestTime(t *testing.T) {
 }
 
 func TestDiaHabil(t *testing.T) {
-	//Creo un sábado
-	f, _ := NewFecha("2017-04-29")
-	if diaHabil(f) == true {
-		t.Error("Dijo que era habil un sábado")
+
+	{
+		//Creo un sábado
+		f, _ := NewFecha("2017-04-29")
+		habil, err := diaHabil(f)
+		assert.Nil(t, err)
+		if habil {
+			t.Error("Dijo que era habil un sábado")
+		}
 	}
 
-	//Creo un domingo
-	f, _ = NewFecha("2017-04-30")
-	if diaHabil(f) == true {
-		t.Error("Dijo que era habil un domingo")
+	{
+		// Creo un domingo
+		f, _ := NewFecha("2017-04-30")
+		habil, err := diaHabil(f)
+		assert.Nil(t, err)
+		if habil {
+			t.Error("Dijo que era habil un domingo")
+		}
 	}
 
-	//Creo un lunes
-	f, _ = NewFecha("2017-05-01")
-	if diaHabil(f) == false {
-		t.Error("Dijo que era habil un lunes")
+	{ // Creo un lunes
+		f, _ := NewFecha("2017-05-01")
+		habil, err := diaHabil(f)
+		assert.Nil(t, err)
+		if !habil {
+			t.Error("Dijo que no era habil un lunes")
+		}
 	}
 
-	//Creo un martes
-	f, _ = NewFecha("2017-05-02")
-	if diaHabil(f) == false {
-		t.Error("Dijo que era habil un martes")
+	{ // Creo un martes
+		f, _ := NewFecha("2017-05-02")
+		habil, err := diaHabil(f)
+		assert.Nil(t, err)
+		if !habil {
+			t.Error("Dijo que no era habil un martes")
+		}
 	}
 
-	//Creo un miercoles
-	f, _ = NewFecha("2017-05-03")
-	if diaHabil(f) == false {
-		t.Error("Dijo que era habil un miercoles")
+	{ // Creo un miercoles
+		f, _ := NewFecha("2017-05-03")
+		habil, err := diaHabil(f)
+		assert.Nil(t, err)
+		if !habil {
+			t.Error("Dijo que no era habil un miercoles")
+		}
 	}
 
-	//Creo un jueves
-	f, _ = NewFecha("2017-05-04")
-	if diaHabil(f) == false {
-		t.Error("Dijo que era habil un jueves")
+	{ // Creo un jueves
+		f, _ := NewFecha("2017-05-04")
+		habil, err := diaHabil(f)
+		assert.Nil(t, err)
+		if !habil {
+			t.Error("Dijo que no era habil un jueves")
+		}
 	}
 
-	//Creo un viernes
-	f, _ = NewFecha("2017-05-05")
-	if diaHabil(f) == false {
-		t.Error("Dijo que era habil un viernes")
+	{ // Creo un viernes
+		f, _ := NewFecha("2017-05-04")
+		habil, err := diaHabil(f)
+		assert.Nil(t, err)
+		if !habil {
+			t.Error("Dijo que no era habil un viernes")
+		}
 	}
 }
 
 func TestProximoDiaHabil(t *testing.T) {
 
-	f, _ := NewFecha("2017-04-29")
-	if proximoDiaHabil(f) == f {
-		t.Error("Sabado")
+	{
+		f, _ := NewFecha("2017-04-29")
+		proximo, err := proximoDiaHabil(f)
+		assert.Nil(t, err)
+		if proximo == f {
+			t.Error("Sabado")
+		}
 	}
 
-	f, _ = NewFecha("2017-04-30")
-	if proximoDiaHabil(f) == f {
-		t.Error("Sabado")
+	{
+		f, _ := NewFecha("2017-04-30")
+		proximo, err := proximoDiaHabil(f)
+		assert.Nil(t, err)
+		if proximo == f {
+			t.Error("Sabado")
+		}
 	}
-
-	f, _ = NewFecha("2017-05-01")
-	if proximoDiaHabil(f) != f {
-		t.Error("Sabado")
+	{
+		f, _ := NewFecha("2017-05-01")
+		proximo, err := proximoDiaHabil(f)
+		assert.Nil(t, err)
+		if proximo != f {
+			t.Error("Sabado")
+		}
 	}
 }
 

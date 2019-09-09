@@ -28,9 +28,8 @@ func NewFecha(texto string) (fch Fecha, err error) {
 		return fch, errors.Wrap(err, `Parseando string: "`+texto+`"`)
 	}
 
-	fch = deTimeAFecha(t)
-
-	return fch, err
+	fch, err = deTimeAFecha(t)
+	return
 }
 
 // NewFechaFromInts crea una fecha a partir de los números ingresados
@@ -65,7 +64,7 @@ func NewFechaFromInts(año, mes, dia int) (fch Fecha, err error) {
 		return fch, errors.Wrap(err, `Parseando string: "`+fechaEntera+`"`)
 	}
 
-	fch = deTimeAFecha(t)
+	fch, err = deTimeAFecha(t)
 
 	return fch, err
 
@@ -82,14 +81,13 @@ func NewFechaFromLayout(layout, texto string) (fch Fecha, err error) {
 		return fch, errors.Wrap(err, `Parseando string: "`+texto+`"`)
 	}
 
-	fch = deTimeAFecha(t)
-
+	fch, err = deTimeAFecha(t)
 	return fch, err
 }
 
 // NewFechaFromTime le corta la hora y devuelve la fecha.
-func NewFechaFromTime(t time.Time) (fch Fecha) {
-	fch = deTimeAFecha(t)
+func NewFechaFromTime(t time.Time) (fch Fecha, err error) {
+	fch, err = deTimeAFecha(t)
 	return
 }
 
@@ -103,44 +101,72 @@ func (f Fecha) IsValid() bool {
 }
 
 // Time devuele la representación con el tipo time.Time
-func (f Fecha) Time() (nuevaFecha time.Time) {
+func (f Fecha) Time() (nuevaFecha time.Time, err error) {
 	enTexto := fmt.Sprint(int(f))
-	nuevaFecha, err := time.Parse("20060102", enTexto)
+	nuevaFecha, err = time.Parse("20060102", enTexto)
 	if err != nil {
-		panic(err)
+		return nuevaFecha, errors.Wrapf(err, "parseando %v", f)
 	}
-	return nuevaFecha
+	return
 }
 
 // Dia devuelve el número del día
-func (f Fecha) Dia() int {
-	return f.Time().Day()
+func (f Fecha) Dia() (dia int, err error) {
+	t1, err := f.Time()
+	if err != nil {
+		return dia, errors.Wrapf(err, "extrayendo día de fecha %v", f)
+	}
+	return t1.Day(), err
 }
 
 // Mes devuelve el número del mes.
-func (f Fecha) Mes() int {
-	return int(f.Time().Month())
+func (f Fecha) Mes() (mes int, err error) {
+	t1, err := f.Time()
+	if err != nil {
+		return 0, errors.Wrapf(err, "extrayendo mes de fecha %v", f)
+	}
+	return int(t1.Month()), err
 }
 
 // Año devuelve el año en formato 2006
-func (f Fecha) Año() int {
-	return f.Time().Year()
+func (f Fecha) Año() (año int, err error) {
+	t1, err := f.Time()
+	if err != nil {
+		return año, errors.Wrapf(err, "extrayendo año de fecha %v", f)
+	}
+	return t1.Year(), err
 }
 
 // AgregarDias devuelve una nueva fecha con la cantidad de días agregados
 // Si el signo es negativo los resta.
-func (f Fecha) AgregarDias(dias int) (NuevaFecha Fecha) {
-	enTime := f.Time().Add(time.Duration(24*dias) * time.Hour)
-	return deTimeAFecha(enTime)
+func (f Fecha) AgregarDias(dias int) (NuevaFecha Fecha, err error) {
+	enTime, err := f.Time()
+	if err != nil {
+		return NuevaFecha, errors.Wrapf(err, "agregando %v días a fecha %v", dias, f)
+	}
+	enTime = enTime.Add(time.Duration(24*dias) * time.Hour)
+	NuevaFecha, err = deTimeAFecha(enTime)
+	return
 }
 
 // AgregarMeses suma la cantidad de meses deseados. El día siempre queda igual
 // salvo que el mes destino tenga menos días. Por ejemplo, sumar 1 mes al 31/01/2017
 // resulta en 28/02/2017
 func (f Fecha) AgregarMeses(cantidad int) (nuevaFecha Fecha, err error) {
-	dia := f.Dia()
-	mes := f.Mes()
-	año := f.Año()
+	dia, err := f.Dia()
+	if err != nil {
+		return nuevaFecha, errors.Wrapf(err, "agregando %v meses a fecha %v", cantidad, f)
+	}
+
+	mes, err := f.Mes()
+	if err != nil {
+		return nuevaFecha, errors.Wrapf(err, "agregando %v meses a fecha %v", cantidad, f)
+	}
+
+	año, err := f.Año()
+	if err != nil {
+		return nuevaFecha, errors.Wrapf(err, "agregando %v meses a fecha %v", cantidad, f)
+	}
 
 	añosAgregar := 0
 
@@ -158,13 +184,17 @@ func (f Fecha) AgregarMeses(cantidad int) (nuevaFecha Fecha, err error) {
 	}
 
 	fec := time.Date(año+añosAgregar, time.Month(mes+mesesAgregar), dia, 0, 0, 0, 0, time.UTC)
-	return NewFechaFromTime(fec), nil
+	nuevaFecha, err = NewFechaFromTime(fec)
+	return
 
 }
 
 // AgregarAños devuelve una nueva fecha con los añós agregados
 func (f Fecha) AgregarAños(cantidad int) (nuevaFecha Fecha, err error) {
-	fechaT := f.Time()
+	fechaT, err := f.Time()
+	if err != nil {
+		return nuevaFecha, errors.Wrapf(err, "agregando %v años a fecha %v", cantidad, f)
+	}
 
 	dia := fechaT.Day()
 	mes := fechaT.Month()
@@ -175,16 +205,26 @@ func (f Fecha) AgregarAños(cantidad int) (nuevaFecha Fecha, err error) {
 		return nuevaFecha, errors.New("No se puede crear una fecha con año posterior al 9999")
 	}
 
-	nuevaFecha = NewFechaFromTime(time.Date(nuevoAño, mes, dia, 0, 0, 0, 0, time.UTC))
+	nuevaFecha, err = NewFechaFromTime(time.Date(nuevoAño, mes, dia, 0, 0, 0, 0, time.UTC))
 	return
 }
 
 // Menos devuelve la cantidad de días de diferencia entre dos fechas
 // Se entiende que f2 es la fecha posterior.
-func (f Fecha) Menos(f2 Fecha) (dias int) {
-	horas := f.Time().Sub(f2.Time()).Hours()
+func (f Fecha) Menos(f2 Fecha) (dias int, err error) {
+	horasTime, err := f.Time()
+	if err != nil {
+		return dias, errors.Wrapf(err, "haciendo la diferencia de días entre fecha %v y fecha %v", f, f2)
+	}
+	f2Time, err := f2.Time()
+	if err != nil {
+		return dias, errors.Wrapf(err, "haciendo la diferencia de días entre fecha %v y fecha %v", f, f2)
+	}
+
+	horas := horasTime.Sub(f2Time).Hours()
+
 	dias = int(math.Trunc(horas / 24))
-	return dias
+	return
 }
 
 // Agrupacion dice el intervalo que se desea para una TimeSeries
@@ -203,18 +243,37 @@ func TimeSeries(desde, hasta Fecha, agrupacion Agrupacion) (fechas []Fecha, err 
 	switch agrupacion {
 	case AgrupacionMensual:
 		// Desde
-		mes := desde.Mes()
-		año := desde.Año()
+		mes, err := desde.Mes()
+		if err != nil {
+			return fechas, errors.Wrapf(err, "creando fecha desde")
+		}
+		año, err := desde.Año()
+		if err != nil {
+			return fechas, errors.Wrapf(err, "creando fecha desde")
+		}
 		f1Temp := time.Date(año, time.Month(mes), 1, 0, 0, 0, 0, time.UTC)
-		f1 := NewFechaFromTime(f1Temp)
+		f1, err := NewFechaFromTime(f1Temp)
+		if err != nil {
+			return fechas, errors.Wrapf(err, "creando fecha desde")
+		}
 		// La primer fecha va seguro
 		fechas = append(fechas, f1)
 
 		// Hasta
-		mesHasta := hasta.Mes()
-		añoHasta := hasta.Año()
+		mesHasta, err := hasta.Mes()
+		if err != nil {
+			return fechas, errors.Wrapf(err, "creando fecha hasta")
+		}
+		añoHasta, err := hasta.Año()
+		if err != nil {
+			return fechas, errors.Wrapf(err, "creando fecha hasta")
+		}
+
 		fnTemp := time.Date(añoHasta, time.Month(mesHasta), 1, 0, 0, 0, 0, time.UTC)
-		fn := NewFechaFromTime(fnTemp)
+		fn, err := NewFechaFromTime(fnTemp)
+		if err != nil {
+			return fechas, errors.Wrapf(err, "creando fecha hasta")
+		}
 
 		fSiguiente := f1
 		for {
@@ -265,7 +324,10 @@ func (f Fecha) MarshalJSON() (by []byte, err error) {
 	if f.IsValid() == false {
 		return by, errors.New(fmt.Sprint("No se puede marshalizar la fecha ", int(f), " . No es válida"))
 	}
-	enTime := f.Time()
+	enTime, err := f.Time()
+	if err != nil {
+		return by, errors.Wrapf(err, "convirtiendo %v a Time", f)
+	}
 	enString := enTime.Format("2006-01-02")
 	by = []byte(`"` + enString + `"`)
 	fmt.Println(enString)
@@ -289,29 +351,40 @@ func (f *Fecha) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return err
 	}
-	*f = NewFechaFromTime(fechaEnTime)
+	*f, err = NewFechaFromTime(fechaEnTime)
+	if err != nil {
+		return errors.Wrapf(err, "creando fecha desde %v", fechaEnTime)
+	}
 
 	return nil
 }
 
 // Transforma a Fecha un time
-func deTimeAFecha(f time.Time) (fecha Fecha) {
+func deTimeAFecha(f time.Time) (fecha Fecha, err error) {
 
 	// Convierto la fecha a texto
 	enTexto := f.Format("20060102")
 
+	if len(enTexto) < 8 {
+		return fecha, errors.Errorf("la fecha mínima es 01/01/1000")
+	}
+
 	// Convierto el texto al int
 	enInt, err := strconv.Atoi(enTexto)
 	if err != nil {
-		panic(err)
+		errors.Wrap(err, "transformando Time a Fecha")
 	}
 
-	return Fecha(enInt)
+	return Fecha(enInt), nil
 }
 
 // JSONString devuelve el la fecha en forato 2016-02-19
-func (f Fecha) JSONString() string {
-	return f.Time().Format("2006-01-02")
+func (f Fecha) JSONString() (str string, err error) {
+	enTime, err := f.Time()
+	if err != nil {
+		return str, errors.Wrapf(err, "convirtiendo fecha %v a JSONString", f)
+	}
+	return enTime.Format("2006-01-02"), nil
 }
 
 func (f Fecha) String() string {
@@ -341,67 +414,97 @@ func (f Fecha) IsZero() bool {
 }
 
 // DiaDeLaSemana devuelve la fecha del día para suegerirla en el index
-func (f Fecha) DiaDeLaSemana() string {
-	dia := f.Time().Weekday()
+func (f Fecha) DiaDeLaSemana() (nombre string, err error) {
+	enTime, err := f.Time()
+	if err != nil {
+		return nombre, errors.Wrapf(err, "convirtiendo a fecha %v", f)
+	}
+	dia := enTime.Weekday()
 	switch dia {
 	case 0:
-		return "Domingo"
+		return "Domingo", nil
 	case 1:
-		return "Lunes"
+		return "Lunes", nil
 	case 2:
-		return "Martes"
+		return "Martes", nil
 	case 3:
-		return "Miércoles"
+		return "Miércoles", nil
 	case 4:
-		return "Jueves"
+		return "Jueves", nil
 	case 5:
-		return "Viernes"
+		return "Viernes", nil
 	case 6:
-		return "Sábado"
+		return "Sábado", nil
 	}
-	return ""
+	return "", errors.Errorf("no se pudo definir el nombre del día")
 }
 
 // AgregarDiasHabiles suma la cantidad de días especificados en el argumento.
 // Considera los sábados y domingos (no tiene en cuenta feriados)
-func (f Fecha) AgregarDiasHabiles(cantidad int) (nuevaFecha Fecha) {
+func (f Fecha) AgregarDiasHabiles(cantidad int) (nuevaFecha Fecha, err error) {
 
 	// Si el primer día no es hábil, arrastro hasta el próximo día hábil
-	nuevaFecha = proximoDiaHabil(f)
+	nuevaFecha, err = proximoDiaHabil(f)
+	if err != nil {
+		return nuevaFecha, errors.Wrap(err, "agregando días hábiles")
+	}
 
 	for i := 0; i == cantidad; i++ {
 		// Agrego un día
-		nuevoTime := f.Time().Add(time.Duration(i * int(time.Hour) * 24))
-		nuevaFecha = deTimeAFecha(nuevoTime)
+		nuevoTime, err := f.Time()
+		if err != nil {
+			return nuevaFecha, errors.Wrapf(err, "convirtiend fecha %v a Time", f)
+		}
+		nuevoTime = nuevoTime.Add(time.Duration(i * int(time.Hour) * 24))
+		nuevaFecha, err = deTimeAFecha(nuevoTime)
+		if err != nil {
+			return nuevaFecha, errors.Wrap(err, "agregando días hábiles")
+		}
 
 		// Este nuevo día, ¿Es hábil?
-		nuevaFecha = proximoDiaHabil(nuevaFecha)
+		nuevaFecha, err = proximoDiaHabil(nuevaFecha)
 	}
-	return nuevaFecha
+	return
 }
 
 // Si el día que se ingresa no es habil, avanza hacia adelante hasta encontrar uno.
-func proximoDiaHabil(f Fecha) (nuevaFecha Fecha) {
+func proximoDiaHabil(f Fecha) (nuevaFecha Fecha, err error) {
 	nuevaFecha = f
 	for {
-		if diaHabil(nuevaFecha) == true {
+		esHabil, err := diaHabil(nuevaFecha)
+		if err != nil {
+			return nuevaFecha, err
+		}
+		if esHabil {
 			break
 		}
-		if diaHabil(nuevaFecha) == false {
-			// Agrego un día hasta llegar a un día habil
-			nuevaFecha = deTimeAFecha(nuevaFecha.Time().Add(time.Hour * 24))
+
+		// No es un día habil, agrego un día hasta llegar a un día habil
+		fTemp, err := nuevaFecha.Time()
+		if err != nil {
+			return nuevaFecha, errors.Wrapf(err, "convirtiendo fecha %v a Time", f)
+		}
+		fTemp = fTemp.Add(time.Hour * 24)
+		nuevaFecha, err = deTimeAFecha(fTemp)
+		if err != nil {
+			return nuevaFecha, errors.Wrapf(err, "convirtiendo time %v a fecha", fTemp)
 		}
 	}
-	return nuevaFecha
+
+	return
 }
 
 // Si es un día hábil devuelve true
-func diaHabil(f Fecha) bool {
-	fecha := f.Time().UTC()
-	if fecha.Weekday() == time.Saturday || fecha.Weekday() == time.Sunday {
-		return false
+func diaHabil(f Fecha) (bool, error) {
+	enTime, err := f.Time()
+	if err != nil {
+		return false, errors.Wrapf(err, "convirtiendo fecha %v a Time", f)
 	}
-	return true
+	enTime = enTime.UTC()
+	if enTime.Weekday() == time.Saturday || enTime.Weekday() == time.Sunday {
+		return false, nil
+	}
+	return true, nil
 }
 
 var _ sql.Scanner = (*Fecha)(nil)
@@ -413,16 +516,23 @@ func (f Fecha) Value() (driver.Value, error) {
 	if f.IsValid() == false {
 		return nil, nil
 	}
-	return f.Time(), nil
+	enTime, err := f.Time()
+	return enTime, err
 }
 
 // Scan satisface la interface de package sql.
 // En la base de datos la guarda como el tipo DATE que es un int64
-func (f *Fecha) Scan(value interface{}) error {
+func (f *Fecha) Scan(value interface{}) (err error) {
 	if value == nil {
-		*f = NewFechaFromTime(time.Time{})
+		*f, err = NewFechaFromTime(time.Time{})
+		if err != nil {
+			return errors.Wrap(err, "realizando Scan()")
+		}
 	}
-	*f = NewFechaFromTime(value.(time.Time))
+	*f, err = NewFechaFromTime(value.(time.Time))
+	if err != nil {
+		return errors.Wrapf(err, "creando fecha a partir de %v", f)
+	}
 
 	return nil
 }
