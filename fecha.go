@@ -230,7 +230,6 @@ func (f Fecha) MarshalJSON() (by []byte, err error) {
 	enTime := f.Time()
 	enString := enTime.Format("2006-01-02")
 	by = []byte(`"` + enString + `"`)
-	fmt.Println(enString)
 	return by, nil
 }
 
