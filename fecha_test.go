@@ -216,6 +216,25 @@ func TestMarshalAndUnmarshalJSON(t *testing.T) {
 	}
 }
 
+func TestUnmarshalJSONFormatoJavaScript(t *testing.T) {
+
+	js := []byte(`"2020-02-04T03:00:00.000Z"`)
+
+	// Demarshalizo
+	var fNueva Fecha
+	err := fNueva.UnmarshalJSON(js)
+	assert.Nil(t, err)
+
+	//Corroboro
+	esperado := Fecha(20200204)
+	if fNueva != esperado {
+		t.Error("No se obtuvo el string esperado.",
+			"\nEsperado: ", esperado,
+			"\nObtenido: ", fNueva,
+		)
+	}
+
+}
 func TestMarshalAndUnmarshalJSONValoresVacios(t *testing.T) {
 
 	// Creo fecha

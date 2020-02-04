@@ -245,6 +245,11 @@ func (f *Fecha) UnmarshalJSON(input []byte) error {
 	// Quito las comillas
 	texto = strings.Replace(texto, `"`, "", -1)
 
+	// Si la fecha viene en formato Date de Javascript(), tomo la primera parte nomás
+	// 2020-02-04T03:00:00.000Z
+	if len(texto) == 24 {
+		texto = texto[:10]
+	}
 	fechaEnTime, err := time.Parse("2006-01-02", texto)
 
 	if err != nil {
