@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"gopkg.in/mgo.v2/bson"
 )
 
 // Fecha permite utilizar time.Time ignorando horas y zonas horarias.
@@ -51,6 +50,13 @@ func NewFechaFromLayout(layout, texto string) (fch Fecha, err error) {
 
 // NewFechaFromTime le corta la hora y devuelve la fecha.
 func NewFechaFromTime(t time.Time) (fch Fecha) {
+	fch = deTimeAFecha(t)
+	return
+}
+
+// NewFechaFromInts le corta la hora y devuelve la fecha.
+func NewFechaFromInts(año, mes, dia int) (fch Fecha) {
+	t := time.Date(año, time.Month(mes), dia, 0, 0, 0, 0, time.UTC)
 	fch = deTimeAFecha(t)
 	return
 }
@@ -195,27 +201,6 @@ func TimeSeries(desde, hasta Fecha, agrupacion Agrupacion) (fechas []Fecha, err 
 		return fechas, errors.New("Agrupacion no implementada")
 	}
 	return
-}
-
-// SetBSON lo utiliza para serializar y desserializar las fechas usando una base de datos MongoDB
-func (f *Fecha) SetBSON(raw bson.Raw) (err error) {
-
-	valor := int32(0)
-	err = raw.Unmarshal(&valor)
-	if err != nil {
-		return err
-	}
-	*f = Fecha(valor)
-	if f.IsValid() == false {
-		//		panic(fmt.Sprint("No se pudo deserializar la fecha", raw))
-		return errors.New(fmt.Sprint("No se pudo deserializar la fecha: ", valor))
-	}
-	return nil
-}
-
-// GetBSON lo utiliza para serializar y deserializar las fechas usando una base de datos MongoDB
-func (f Fecha) GetBSON() (rtdo interface{}, err error) {
-	return int32(f), nil
 }
 
 // MarshalJSON es para tomar un string y pasarlo a una fecha.Fecha

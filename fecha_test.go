@@ -103,6 +103,13 @@ func TestNewDate(t *testing.T) {
 	}
 }
 
+func TestNewFechaFromInts(t *testing.T) {
+	{
+		f := NewFechaFromInts(2010, 12, 31)
+		assert.Equal(t, Fecha(20101231), f)
+	}
+}
+
 func TestAgregarMeses(t *testing.T) {
 	// Creo fecha
 	f, err := NewFecha("2016-12-19")
