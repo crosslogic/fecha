@@ -118,37 +118,25 @@ func TestAgregarMeses(t *testing.T) {
 	}
 
 	// Agrego 1 mes
-	f1, err := f.AgregarMeses(1)
-	if err != nil {
-		t.Error(err)
-	}
+	f1 := f.AgregarMeses(1)
 	if f1 != Fecha(20170119) {
 		t.Error("Se esperaba", Fecha(20170119), "se obtuvo ", f1)
 	}
 
 	// Agrego 13 meses
-	f2, err := f.AgregarMeses(13)
-	if err != nil {
-		t.Error(err)
-	}
+	f2 := f.AgregarMeses(13)
 	if f2 != Fecha(20180119) {
 		t.Error("Se esperaba", Fecha(20180119), "se obtuvo ", f2)
 	}
 
 	// Resto 6 meses
-	f3, err := f.AgregarMeses(-6)
-	if err != nil {
-		t.Error(err)
-	}
+	f3 := f.AgregarMeses(-6)
 	if f3 != Fecha(20160619) {
 		t.Error("Se esperaba", Fecha(20160619), "se obtuvo ", f3)
 	}
 
 	// Resto 6 meses
-	f4, err := f.AgregarMeses(-18)
-	if err != nil {
-		t.Error(err)
-	}
+	f4 := f.AgregarMeses(-18)
 	if f4 != Fecha(20150619) {
 		t.Error("Se esperaba", Fecha(20150619), "se obtuvo ", f3)
 	}

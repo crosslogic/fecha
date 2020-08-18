@@ -95,6 +95,15 @@ func (f Fecha) Año() int {
 	return f.Time().Year()
 }
 
+// PeriodoMes devuelve la struct Mes correspondiente a la fecha.
+// Se supone que se está trabajando con una fecha válida.
+func (f Fecha) PeriodoMes() Mes {
+	return Mes{
+		año: f.Año(),
+		mes: f.Mes(),
+	}
+}
+
 // AgregarDias devuelve una nueva fecha con la cantidad de días agregados
 // Si el signo es negativo los resta.
 func (f Fecha) AgregarDias(dias int) (NuevaFecha Fecha) {
@@ -105,7 +114,7 @@ func (f Fecha) AgregarDias(dias int) (NuevaFecha Fecha) {
 // AgregarMeses suma la cantidad de meses deseados. El día siempre queda igual
 // salvo que el mes destino tenga menos días. Por ejemplo, sumar 1 mes al 31/01/2017
 // resulta en 28/02/2017
-func (f Fecha) AgregarMeses(cantidad int) (nuevaFecha Fecha, err error) {
+func (f Fecha) AgregarMeses(cantidad int) (nuevaFecha Fecha) {
 	dia := f.Dia()
 	mes := f.Mes()
 	año := f.Año()
@@ -121,17 +130,13 @@ func (f Fecha) AgregarMeses(cantidad int) (nuevaFecha Fecha, err error) {
 
 	mesesAgregar := cantidad - añosAgregar*12
 
-	if año+añosAgregar > 9999 {
-		return nuevaFecha, errors.New("No se puede crear una fecha con año posterior al 9999")
-	}
-
 	fec := time.Date(año+añosAgregar, time.Month(mes+mesesAgregar), dia, 0, 0, 0, 0, time.UTC)
-	return NewFechaFromTime(fec), nil
+	return NewFechaFromTime(fec)
 
 }
 
 // AgregarAños devuelve una nueva fecha con los añós agregados
-func (f Fecha) AgregarAños(cantidad int) (nuevaFecha Fecha, err error) {
+func (f Fecha) AgregarAños(cantidad int) (nuevaFecha Fecha) {
 	fechaT := f.Time()
 
 	dia := fechaT.Day()
@@ -140,7 +145,7 @@ func (f Fecha) AgregarAños(cantidad int) (nuevaFecha Fecha, err error) {
 
 	nuevoAño := año + cantidad
 	if nuevoAño > 9999 {
-		return nuevaFecha, errors.New("No se puede crear una fecha con año posterior al 9999")
+		return nuevaFecha
 	}
 
 	nuevaFecha = NewFechaFromTime(time.Date(nuevoAño, mes, dia, 0, 0, 0, 0, time.UTC))
@@ -186,10 +191,7 @@ func TimeSeries(desde, hasta Fecha, agrupacion Agrupacion) (fechas []Fecha, err 
 
 		fSiguiente := f1
 		for {
-			fSiguiente, err = fSiguiente.AgregarMeses(1)
-			if err != nil {
-				return fechas, errors.Wrap(err, "Creando TimeSeries")
-			}
+			fSiguiente = fSiguiente.AgregarMeses(1)
 			fechas = append(fechas, fSiguiente)
 
 			// Verifico si llegué a la última fecha
