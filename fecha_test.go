@@ -1,7 +1,6 @@
 package fecha
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -26,7 +25,6 @@ func TestTime(t *testing.T) {
 			"\nObtenido: ", enTime,
 		)
 	}
-	fmt.Println(enTime)
 }
 
 func TestDiaHabil(t *testing.T) {
@@ -139,6 +137,12 @@ func TestAgregarMeses(t *testing.T) {
 	f4 := f.AgregarMeses(-18)
 	if f4 != Fecha(20150619) {
 		t.Error("Se esperaba", Fecha(20150619), "se obtuvo ", f3)
+	}
+
+	{ // Ultimo día de mes
+		f := Fecha(20210131)
+		f2 := f.AgregarMeses(1)
+		assert.Equal(t, Fecha(20210228), f2)
 	}
 }
 
@@ -260,5 +264,28 @@ func TestMarshalAndUnmarshalJSONValoresVacios(t *testing.T) {
 			"\nEsperado: ", "null",
 			"\nObtenido: ", enString,
 		)
+	}
+}
+
+func TestMenos(t *testing.T) {
+	f1 := Fecha(20200823)
+	f2 := Fecha(20200824)
+
+	{
+		dias := Diff(f1, f1)
+		assert.Equal(t, 0, dias)
+	}
+	{
+		dias := Diff(f1, f2)
+		assert.Equal(t, 1, dias)
+	}
+	{
+		dias := Diff(f2, f1)
+		assert.Equal(t, -1, dias)
+	}
+	{
+		f0 := Fecha(20190823)
+		dias := Diff(f0, f1)
+		assert.Equal(t, 366, dias)
 	}
 }

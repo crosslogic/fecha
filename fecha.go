@@ -129,8 +129,21 @@ func (f Fecha) AgregarMeses(cantidad int) (nuevaFecha Fecha) {
 	añosAgregar = cantidad / 12
 
 	mesesAgregar := cantidad - añosAgregar*12
+	nuevoMes := mes + mesesAgregar
 
-	fec := time.Date(año+añosAgregar, time.Month(mes+mesesAgregar), dia, 0, 0, 0, 0, time.UTC)
+	if dia == 31 {
+		switch nuevoMes {
+		case 2, 4, 6, 9, 11:
+			dia = 30
+		}
+	}
+
+	if dia == 30 && nuevoMes == 2 {
+		// TODO: si es año bisiesto que ponga 29
+		dia = 28
+	}
+
+	fec := time.Date(año+añosAgregar, time.Month(nuevoMes), dia, 0, 0, 0, 0, time.UTC)
 	return NewFechaFromTime(fec)
 
 }
@@ -156,6 +169,15 @@ func (f Fecha) AgregarAños(cantidad int) (nuevaFecha Fecha) {
 // Se entiende que f2 es la fecha posterior.
 func (f Fecha) Menos(f2 Fecha) (dias int) {
 	horas := f.Time().Sub(f2.Time()).Hours()
+	dias = int(math.Trunc(horas / 24))
+	return dias
+}
+
+// Diff calcula la diferencia de días entre dos fechas.Diff
+// Si la segunda fecha es anterior a la primera, devuelve los días en negativo.
+func Diff(f1, f2 Fecha) (dias int) {
+
+	horas := f2.Time().Sub(f1.Time()).Hours()
 	dias = int(math.Trunc(horas / 24))
 	return dias
 }
@@ -263,7 +285,13 @@ func deTimeAFecha(f time.Time) (fecha Fecha) {
 }
 
 // JSONString devuelve el la fecha en forato 2016-02-19
-func (f Fecha) JSONString() string {
+func (f *Fecha) JSONString() string {
+	if f == nil {
+		return "null"
+	}
+	if *f == 0 {
+		return "null"
+	}
 	return f.Time().Format("2006-01-02")
 }
 
@@ -287,10 +315,7 @@ func (f Fecha) String() string {
 
 // IsZero devuelve true si la fecha es el número 0.
 func (f Fecha) IsZero() bool {
-	if int(f) == 0 {
-		return true
-	}
-	return false
+	return int(f) == 0
 }
 
 // DiaDeLaSemana devuelve la fecha del día para suegerirla en el index
@@ -357,25 +382,49 @@ func diaHabil(f Fecha) bool {
 	return true
 }
 
-var _ sql.Scanner = (*Fecha)(nil)
 var _ driver.Valuer = (*Fecha)(nil)
 
 // Value satisface la interface de package sql.
 // En la base de datos la guarda como el tipo DATE que es un int64
 func (f Fecha) Value() (driver.Value, error) {
-	if f.IsValid() == false {
+	if f.IsZero() {
 		return nil, nil
 	}
-	return f.Time(), nil
+	if !f.IsValid() {
+		return nil, errors.Errorf("invalid date %v", int(f))
+	}
+	return f.JSONString(), nil
 }
+
+type Time interface {
+	Time() time.Time
+}
+
+var _ sql.Scanner = (*Fecha)(nil)
 
 // Scan satisface la interface de package sql.
 // En la base de datos la guarda como el tipo DATE que es un int64
 func (f *Fecha) Scan(value interface{}) error {
 	if value == nil {
-		*f = NewFechaFromTime(time.Time{})
+		return nil
 	}
-	*f = NewFechaFromTime(value.(time.Time))
+	if value == 0 {
+		return nil
+	}
+
+	// Es time?
+	t, ok := value.(time.Time)
+	if ok {
+		*f = NewFechaFromTime(t)
+		return nil
+	}
+
+	// Tiene interface Time?
+	tInterface, ok := value.(Time)
+	if ok {
+		*f = NewFechaFromTime(tInterface.Time())
+		return nil
+	}
 
 	return nil
 }
