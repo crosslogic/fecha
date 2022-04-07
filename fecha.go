@@ -130,20 +130,14 @@ func (f Fecha) AgregarMeses(cantidad int) (nuevaFecha Fecha) {
 
 	mesesAgregar := cantidad - añosAgregar*12
 	nuevoMes := mes + mesesAgregar
+	nuevoAño := año + añosAgregar
 
-	if dia == 31 {
-		switch nuevoMes {
-		case 2, 4, 6, 9, 11:
-			dia = 30
-		}
+	ultimoD := ultimoDia(nuevoMes, nuevoAño)
+	if ultimoD < dia {
+		dia = ultimoD
 	}
 
-	if dia == 30 && nuevoMes == 2 {
-		// TODO: si es año bisiesto que ponga 29
-		dia = 28
-	}
-
-	fec := time.Date(año+añosAgregar, time.Month(nuevoMes), dia, 0, 0, 0, 0, time.UTC)
+	fec := time.Date(nuevoAño, time.Month(nuevoMes), dia, 0, 0, 0, 0, time.UTC)
 	return NewFechaFromTime(fec)
 
 }

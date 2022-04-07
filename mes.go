@@ -140,9 +140,7 @@ func (m Mes) PrimerDia() Fecha {
 
 // UltimoDia devuelve la fecha considerando el último día del período.
 func (m Mes) UltimoDia() Fecha {
-
-	f := NewFechaFromInts(m.año, m.mes, 1)
-	return f.AgregarMeses(1).AgregarDias(-1)
+	return NewFechaFromInts(m.año, m.mes, ultimoDia(m.mes, m.año))
 }
 
 // JSONString devuelve la representación que se utiliza en JSON.
@@ -273,4 +271,22 @@ func (m *Mes) UnmarshalJSON(input []byte) error {
 	*m = Mes{año, mes}
 
 	return nil
+}
+
+func ultimoDia(mes int, año int) (out int) {
+	out = 31
+	switch mes {
+	case 2, 4, 6, 9, 11:
+		out = 30
+	}
+
+	if mes == 2 {
+		if año%4 == 0 && año%100 != 0 || año%400 == 0 {
+			return 29
+		} else {
+			return 28
+		}
+	}
+
+	return
 }

@@ -40,6 +40,35 @@ func TestValid(t *testing.T) {
 	assert.True(t, Mes{2020, 12}.Valid())
 }
 
+func TestUltimoDia(t *testing.T) {
+	assert := assert.New(t)
+	assert.Equal(31, ultimoDia(1, 2023))
+	assert.Equal(28, ultimoDia(2, 2023))
+	assert.Equal(31, ultimoDia(3, 2023))
+	assert.Equal(30, ultimoDia(4, 2023))
+	assert.Equal(31, ultimoDia(5, 2023))
+	assert.Equal(30, ultimoDia(6, 2023))
+	assert.Equal(31, ultimoDia(7, 2023))
+	assert.Equal(31, ultimoDia(8, 2023))
+	assert.Equal(30, ultimoDia(9, 2023))
+	assert.Equal(31, ultimoDia(10, 2023))
+	assert.Equal(30, ultimoDia(11, 2023))
+	assert.Equal(31, ultimoDia(12, 2023))
+
+	assert.Equal(31, ultimoDia(1, 2024))
+	assert.Equal(29, ultimoDia(2, 2024))
+	assert.Equal(31, ultimoDia(3, 2024))
+	assert.Equal(30, ultimoDia(4, 2024))
+	assert.Equal(31, ultimoDia(5, 2024))
+	assert.Equal(30, ultimoDia(6, 2024))
+	assert.Equal(31, ultimoDia(7, 2024))
+	assert.Equal(31, ultimoDia(8, 2024))
+	assert.Equal(30, ultimoDia(9, 2024))
+	assert.Equal(31, ultimoDia(10, 2024))
+	assert.Equal(30, ultimoDia(11, 2024))
+	assert.Equal(31, ultimoDia(12, 2024))
+}
+
 func TestSumarMeses(t *testing.T) {
 	mesCero := Mes{2020, 8}
 
