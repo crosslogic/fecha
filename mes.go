@@ -38,6 +38,28 @@ type Mes struct {
 	mes int
 }
 
+func NewMesMust(año, mes int) Mes {
+	m := Mes{año, mes}
+	if m.mes < 1 || m.mes > 12 {
+		panic(errors.Errorf("mes '%v' es inválido", m.mes))
+	}
+	if m.año < AñoMinimo || m.año > AñoMaximo {
+		panic(errors.Errorf("año '%v' fuera del rango permitido", m.año))
+	}
+	return m
+}
+
+func NewMes(año, mes int) (out Mes, err error) {
+	m := Mes{año, mes}
+	if m.mes < 1 || m.mes > 12 {
+		return out, errors.Errorf("mes '%v' es inválido", m.mes)
+	}
+	if m.año < AñoMinimo || m.año > AñoMaximo {
+		return out, errors.Errorf("año '%v' fuera del rango permitido", m.año)
+	}
+	return
+}
+
 // MesDelAño devuelve el número de mes.
 func (m Mes) MesDelAño() int {
 	return m.mes
@@ -46,6 +68,41 @@ func (m Mes) MesDelAño() int {
 // Año devuelve el número del año.
 func (m Mes) Año() int {
 	return m.año
+}
+
+func (m Mes) Anterior(f2 Mes) bool {
+	if m.año > f2.año { // 2030 > 2021
+		return false
+	}
+	if m.año < f2.año { // 2030 > 2021
+		return true
+	}
+	// Son años distintos, define mes
+	return m.mes < f2.mes
+}
+
+func (m Mes) AnteriorOIgual(f2 Mes) bool {
+	if m == f2 {
+		return true
+	}
+	return m.Anterior(f2)
+}
+
+func (m Mes) Posterior(f2 Mes) bool {
+	if m.año > f2.año {
+		return true
+	}
+	if m.año < f2.año {
+		return false
+	}
+	return m.mes > f2.mes
+}
+
+func (m Mes) PosteriorOIgual(f2 Mes) bool {
+	if m == f2 {
+		return true
+	}
+	return m.Posterior(f2)
 }
 
 func (m Mes) String() (out string) {

@@ -195,6 +195,50 @@ func TestSumarMeses(t *testing.T) {
 	}
 }
 
+func TestPosterior(t *testing.T) {
+	assert := assert.New(t)
+	f1 := NewMesMust(2022, 7)
+	f2 := NewMesMust(2022, 8)
+
+	assert.True(f2.Posterior(f1))
+	assert.False(f1.Posterior(f2))
+}
+
+func TestPosteriorOIgual(t *testing.T) {
+	assert := assert.New(t)
+	f1 := NewMesMust(2022, 7)
+	f2 := NewMesMust(2022, 8)
+
+	assert.True(f2.PosteriorOIgual(f1))
+	assert.False(f1.PosteriorOIgual(f2))
+
+	f2 = NewMesMust(2022, 7)
+	assert.True(f1.PosteriorOIgual(f1))
+	assert.True(f2.PosteriorOIgual(f2))
+}
+
+func TestAnterior(t *testing.T) {
+	assert := assert.New(t)
+	f1 := NewMesMust(2021, 3)
+	f2 := NewMesMust(2030, 2)
+
+	assert.True(f1.Anterior(f2))
+	assert.False(f2.Anterior(f1))
+}
+
+func TestAnteriorOIgual(t *testing.T) {
+	assert := assert.New(t)
+	f1 := NewMesMust(2022, 7)
+	f2 := NewMesMust(2022, 8)
+
+	assert.True(f1.AnteriorOIgual(f2))
+	assert.False(f2.AnteriorOIgual(f1))
+
+	f2 = NewMesMust(2022, 7)
+	assert.True(f1.AnteriorOIgual(f1))
+	assert.True(f2.AnteriorOIgual(f2))
+}
+
 func TestMarshalAndUnmarshalMes(t *testing.T) {
 
 	m := Mes{2020, 8}

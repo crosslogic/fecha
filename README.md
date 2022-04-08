@@ -28,8 +28,6 @@ Operaciones con fechas:
 
 ```go
 
-
-
 _ = f.AgregarDias(5)  // 2020-08-26
 
 _ = f.AgregarDiasHabiles(5) // 2020-08-28
