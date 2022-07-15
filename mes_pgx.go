@@ -49,7 +49,7 @@ func (src Mes) EncodeBinary(ci *pgtype.ConnInfo, buf []byte) ([]byte, error) {
 		d.Status = pgtype.Null
 	} else {
 		d.Status = pgtype.Present
-		d.Time = time.Date(src.año, time.Month(src.mes), 1, 0, 0, 0, 0, nil)
+		d.Time = time.Date(src.año, time.Month(src.mes), 1, 0, 0, 0, 0, time.UTC)
 	}
 	return d.EncodeBinary(ci, buf)
 }
