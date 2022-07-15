@@ -38,6 +38,8 @@ type Mes struct {
 	mes int
 }
 
+var NilMes = Mes{}
+
 func NewMesMust(año, mes int) Mes {
 	m := Mes{año, mes}
 	if m.mes < 1 || m.mes > 12 {
