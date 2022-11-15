@@ -69,6 +69,51 @@ func TestUltimoDia(t *testing.T) {
 	assert.Equal(31, ultimoDia(12, 2024))
 }
 
+func TestNeMesFromJSON(t *testing.T) {
+	type res struct {
+		str string
+		err bool
+		mes Mes
+	}
+	tt := []res{
+		{
+			str: "2021-7",
+			err: false,
+		},
+		{
+			str: "2021-13",
+			err: true,
+		},
+		{
+			str: "202113",
+			err: true,
+		},
+		{
+			str: "2021-13",
+			err: true,
+		},
+		{
+			str: "2021-01",
+			mes: NewMesMust(2021, 1),
+		},
+		{
+			str: "2007-12",
+			mes: NewMesMust(2007, 12),
+		},
+	}
+
+	for _, v := range tt {
+		f, err := NewMesFromJSON(v.str)
+		if err != nil {
+			assert.True(t, v.err)
+		}
+		if err == nil {
+			assert.False(t, v.err)
+			assert.Equal(t, v.mes, f)
+		}
+	}
+}
+
 func TestSumarMeses(t *testing.T) {
 	mesCero := Mes{2020, 8}
 

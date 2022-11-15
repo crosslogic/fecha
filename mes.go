@@ -51,15 +51,34 @@ func NewMesMust(año, mes int) Mes {
 	return m
 }
 
-func NewMes(año, mes int) (out Mes, err error) {
+func NewMes(año, mes int) (Mes, error) {
 	m := Mes{año, mes}
 	if m.mes < 1 || m.mes > 12 {
-		return out, errors.Errorf("mes '%v' es inválido", m.mes)
+		return m, errors.Errorf("mes '%v' es inválido", m.mes)
 	}
 	if m.año < AñoMinimo || m.año > AñoMaximo {
-		return out, errors.Errorf("año '%v' fuera del rango permitido", m.año)
+		return m, errors.Errorf("año '%v' fuera del rango permitido", m.año)
 	}
-	return
+	return m, nil
+}
+
+func NewMesFromJSON(str string) (out Mes, err error) {
+	if len(str) != 7 {
+		return out, errors.Errorf("formato incorrecto, se esperaba YYYY-MM, se ingresó: %v", str)
+	}
+	partes := strings.Split(str, "-")
+	if len(partes) != 2 {
+		return out, errors.Errorf("formato incorrecto, se esperaba YYYY-MM, se ingresó: %v", str)
+	}
+	año, err := strconv.Atoi(partes[0])
+	if err != nil {
+		return out, errors.Errorf("formato incorrecto de año: %v", str)
+	}
+	mes, err := strconv.Atoi(partes[1])
+	if err != nil {
+		return out, errors.Errorf("formato incorrecto de mes: %v", str)
+	}
+	return NewMes(año, mes)
 }
 
 // MesDelAño devuelve el número de mes.
