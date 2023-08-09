@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // AñoMinimo determina que si se ingresa una fecha con año menor,
@@ -43,10 +41,10 @@ var NilMes = Mes{}
 func NewMesMust(año, mes int) Mes {
 	m := Mes{año, mes}
 	if m.mes < 1 || m.mes > 12 {
-		panic(errors.Errorf("mes '%v' es inválido", m.mes))
+		panic(fmt.Errorf("invalid month '%v' (must be between 1 and 12)", m.mes))
 	}
 	if m.año < AñoMinimo || m.año > AñoMaximo {
-		panic(errors.Errorf("año '%v' fuera del rango permitido", m.año))
+		panic(fmt.Errorf("year '%v' out of range (must be between %v and %v)", m.año, AñoMinimo, AñoMaximo))
 	}
 	return m
 }
@@ -54,29 +52,29 @@ func NewMesMust(año, mes int) Mes {
 func NewMes(año, mes int) (Mes, error) {
 	m := Mes{año, mes}
 	if m.mes < 1 || m.mes > 12 {
-		return m, errors.Errorf("mes '%v' es inválido", m.mes)
+		return m, fmt.Errorf("invalid month '%v' (must be between 1 and 12)", m.mes)
 	}
 	if m.año < AñoMinimo || m.año > AñoMaximo {
-		return m, errors.Errorf("año '%v' fuera del rango permitido", m.año)
+		return m, fmt.Errorf("year '%v' out of range (must be between %v and %v)", m.año, AñoMinimo, AñoMaximo)
 	}
 	return m, nil
 }
 
 func NewMesFromJSON(str string) (out Mes, err error) {
 	if len(str) != 7 {
-		return out, errors.Errorf("formato incorrecto, se esperaba YYYY-MM, se ingresó: %v", str)
+		return out, fmt.Errorf("incorrect format: expected YYYY-MM; got: %v", str)
 	}
 	partes := strings.Split(str, "-")
 	if len(partes) != 2 {
-		return out, errors.Errorf("formato incorrecto, se esperaba YYYY-MM, se ingresó: %v", str)
+		return out, fmt.Errorf("incorrect format: expected YYYY-MM; got: %v", str)
 	}
 	año, err := strconv.Atoi(partes[0])
 	if err != nil {
-		return out, errors.Errorf("formato incorrecto de año: %v", str)
+		return out, fmt.Errorf("invalid year '%v': %w", str, err)
 	}
 	mes, err := strconv.Atoi(partes[1])
 	if err != nil {
-		return out, errors.Errorf("formato incorrecto de mes: %v", str)
+		return out, fmt.Errorf("invalid month '%v': %w", str, err)
 	}
 	return NewMes(año, mes)
 }
@@ -265,7 +263,7 @@ func (m Mes) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	if !m.Valid() {
-		return nil, errors.Errorf("se intentó persistir un Mes no válido. año=(%v), mes=(%v)", m.año, m.mes)
+		return m, fmt.Errorf("invalid month '%v' (must be between 1 and 12)", m.mes)
 	}
 	return m.PrimerDia().Time(), nil
 }
@@ -282,7 +280,7 @@ func (m *Mes) Scan(value interface{}) error {
 
 	enTime, ok := value.(time.Time)
 	if !ok {
-		return errors.Errorf("se esperaba que el tipo en la base de datos fuera time.Time, era %T", value)
+		return fmt.Errorf("expected value type: time.Time, got: %T", value)
 	}
 	*m = NewFechaFromTime(enTime).PeriodoMes()
 
@@ -297,7 +295,7 @@ func (m Mes) MarshalJSON() (by []byte, err error) {
 		return by, nil
 	}
 	if !m.Valid() {
-		return by, errors.Errorf("no se puede marshalizar la fecha %v, (no es válida)", m)
+		return by, fmt.Errorf("no se puede marshalizar la fecha %v, (no es válida)", m)
 	}
 	by = []byte(`"` + m.JSONString() + `"`)
 	return by, nil
@@ -305,7 +303,7 @@ func (m Mes) MarshalJSON() (by []byte, err error) {
 
 // UnmarshalJSON es para parsear el string a una struct Mes.
 // Si llega una cadena null o vacía, se crea una struct con valor cero.
-func (m *Mes) UnmarshalJSON(input []byte) error {
+func (m *Mes) UnmarshalJSON(input []byte) (err error) {
 	texto := string(input)
 
 	if texto == "null" || texto == `""` {
@@ -322,33 +320,11 @@ func (m *Mes) UnmarshalJSON(input []byte) error {
 		texto = texto[:7]
 	}
 
-	partes := strings.Split(texto, "-")
-	if len(partes) != 2 {
-		return errors.Errorf("se esperaba una cadena con el formato AAAA-MM")
-	}
-
-	año, err := strconv.Atoi(partes[0])
-	if err != nil {
-		return errors.Wrap(err, "convirtiendo el año")
-	}
-
-	mes, err := strconv.Atoi(partes[1])
-	if err != nil {
-		return errors.Wrap(err, "convirtiendo el mes")
-	}
-	if mes > 12 || mes < 0 {
-		// Nunca puede ser válido
-		return errors.Errorf("el mes debe estar entre 1 y 12 (era %v)", mes)
-	}
-
 	if m == nil {
-		m = &Mes{año, mes}
-		return nil
+		m = new(Mes)
 	}
-
-	*m = Mes{año, mes}
-
-	return nil
+	*m, err = NewMesFromJSON(texto)
+	return
 }
 
 func ultimoDia(mes int, año int) (out int) {

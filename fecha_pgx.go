@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgtype"
-	"github.com/rs/zerolog/log"
 )
 
 var _ pgtype.ValueTranscoder = (*Fecha)(nil)
@@ -99,24 +98,19 @@ func (src *Fecha) EncodeText(ci *pgtype.ConnInfo, buf []byte) ([]byte, error) {
 
 // TypeName returns the PostgreSQL name of this type.
 func (Fecha) TypeName() string {
-	log.Error().Msgf("Returning typename: %v", "date")
 	return "date"
 }
 
 func (t *Fecha) NewTypeValue() pgtype.Value {
-	log.Error().Msgf("NewTypeValue: returning %v", *t)
 	return t
 }
 
 func (t *Fecha) Set(src interface{}) error {
-	log.Error().Msgf("Set: src was %v", src)
 	return fmt.Errorf("cannot convert %v to Point", src)
 }
 func (t *Fecha) Get() interface{} {
-	log.Error().Msgf("Get: returning %v", *t)
 	return *t
 }
 func (t *Fecha) AssignTo(dst interface{}) error {
-	log.Error().Msgf("Assigning to, dst was %v", dst)
 	return nil
 }

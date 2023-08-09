@@ -1,6 +1,8 @@
 # fecha
 
 Este package permite trabajar con **fechas** y **períodos mensuales**.
+Desarrolado para uso propio. Incluye métodos para serialización binaria
+utilizada por package `pgx`.
 
 ```go
 
@@ -28,11 +30,12 @@ Operaciones con fechas:
 
 ```go
 
+f, _ = fecha.NewFechaFromInts(2020, 8, 21)
 _ = f.AgregarDias(5)  // 2020-08-26
-
 _ = f.AgregarDiasHabiles(5) // 2020-08-28
 
 // Diferencia dias
 f0 := fecha.Fecha(20190823)
 dias := fecha.Diff(f0, f1)   // 366
+
 ```

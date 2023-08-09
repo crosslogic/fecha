@@ -11,8 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // Fecha permite utilizar time.Time ignorando horas y zonas horarias.
@@ -24,7 +22,7 @@ func NewFecha(texto string) (fch Fecha, err error) {
 
 	t, err := time.Parse("2006-01-02", texto)
 	if err != nil {
-		return fch, errors.Wrap(err, `Parseando string: "`+texto+`"`)
+		return fch, fmt.Errorf("parsing string '%v': %w", texto, err)
 	}
 
 	fch = deTimeAFecha(t)
@@ -40,7 +38,7 @@ func NewFechaFromLayout(layout, texto string) (fch Fecha, err error) {
 	}
 	t, err := time.Parse(layout, texto)
 	if err != nil {
-		return fch, errors.Wrap(err, `Parseando string: "`+texto+`"`)
+		return fch, fmt.Errorf("parsing string '%v': %w", texto, err)
 	}
 
 	fch = deTimeAFecha(t)
@@ -64,10 +62,7 @@ func NewFechaFromInts(año, mes, dia int) (fch Fecha) {
 // IsValid devuelve true si es una fecha válida.
 func (f Fecha) IsValid() bool {
 	_, err := time.Parse("20060102", fmt.Sprint(int(f)))
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 // Time devuele la representación con el tipo time.Time
@@ -216,7 +211,7 @@ func TimeSeries(desde, hasta Fecha, agrupacion Agrupacion) (fechas []Fecha, err 
 			}
 		}
 	default:
-		return fechas, errors.New("Agrupacion no implementada")
+		return fechas, fmt.Errorf("not implemented")
 	}
 	return
 }
@@ -227,8 +222,8 @@ func (f Fecha) MarshalJSON() (by []byte, err error) {
 		by = []byte("null")
 		return by, nil
 	}
-	if f.IsValid() == false {
-		return by, errors.New(fmt.Sprint("No se puede marshalizar la fecha ", int(f), " . No es válida"))
+	if !f.IsValid() {
+		return by, fmt.Errorf("invalid date '%v'", int(f))
 	}
 	enTime := f.Time()
 	enString := enTime.Format("2006-01-02")
@@ -385,7 +380,7 @@ func (f Fecha) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	if !f.IsValid() {
-		return nil, errors.Errorf("invalid date %v", int(f))
+		return nil, fmt.Errorf("invalid date %v", int(f))
 	}
 	return f.JSONString(), nil
 }

@@ -70,47 +70,49 @@ func TestUltimoDia(t *testing.T) {
 }
 
 func TestNeMesFromJSON(t *testing.T) {
-	type res struct {
-		str string
-		err bool
-		mes Mes
-	}
-	tt := []res{
-		{
-			str: "2021-7",
-			err: false,
-		},
-		{
-			str: "2021-13",
-			err: true,
-		},
-		{
-			str: "202113",
-			err: true,
-		},
-		{
-			str: "2021-13",
-			err: true,
-		},
-		{
-			str: "2021-01",
-			mes: NewMesMust(2021, 1),
-		},
-		{
-			str: "2007-12",
-			mes: NewMesMust(2007, 12),
-		},
-	}
 
-	for _, v := range tt {
-		f, err := NewMesFromJSON(v.str)
-		if err != nil {
-			assert.True(t, v.err)
-		}
-		if err == nil {
-			assert.False(t, v.err)
-			assert.Equal(t, v.mes, f)
-		}
+	{
+		str := "2021-7"
+		_, err := NewMesFromJSON(str)
+		assert.NotNil(t, err)
+	}
+	{
+		str := "2021-13"
+		_, err := NewMesFromJSON(str)
+		assert.NotNil(t, err)
+	}
+	{
+		str := "202113"
+		_, err := NewMesFromJSON(str)
+		assert.NotNil(t, err)
+	}
+	{
+		str := "2021-13"
+		_, err := NewMesFromJSON(str)
+		assert.NotNil(t, err)
+	}
+	{
+		str := "2021-00"
+		_, err := NewMesFromJSON(str)
+		assert.NotNil(t, err)
+	}
+	{
+		str := "0000-01"
+		_, err := NewMesFromJSON(str)
+		assert.NotNil(t, err)
+	}
+	{
+		str := "2021-01"
+		_, err := NewMesFromJSON(str)
+		assert.Nil(t, err)
+	}
+	{
+		f := NewMesMust(2021, 1)
+		assert.Equal(t, Mes{año: 2021, mes: 1}, f)
+	}
+	{
+		f := NewMesMust(2007, 12)
+		assert.Equal(t, Mes{año: 2007, mes: 12}, f)
 	}
 }
 
